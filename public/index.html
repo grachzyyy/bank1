@@ -1,18 +1,27 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <title>Банк</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Банковская система — Вход</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <h2>Вход в интернет-банк</h2>
-  <form id="login-form">
-    <input type="text" id="username" placeholder="Логин" required>
-    <input type="password" id="password" placeholder="Пароль" required>
-    <button type="submit">Войти</button>
-  </form>
-  <p id="message"></p>
+  <div class="container">
+    <h1>Вход в систему</h1>
+    <form id="loginForm">
+      <label for="username">Логин:</label>
+      <input type="text" id="username" name="username" required />
+
+      <label for="password">Пароль:</label>
+      <input type="password" id="password" name="password" required />
+
+      <button type="submit">Войти</button>
+    </form>
+    <div id="message" class="message"></div>
+  </div>
+
+  <script src="confetti.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

@@ -13,6 +13,9 @@ const failedAttempts = {};
 const MAX_ATTEMPTS = 5;
 const BLOCK_TIME = 4 * 60 * 60 * 1000; // 4 часа
 
+const CORRECT_USERNAME = 'bankuser';
+const CORRECT_PASSWORD = '123456';
+
 app.post('/login', (req, res) => {
   const ip = req.ip;
   const currentTime = Date.now();
@@ -28,8 +31,8 @@ app.post('/login', (req, res) => {
     return res.status(403).send(`Вы заблокированы на 4 часа. Осталось: ${remaining} мин.`);
   }
 
-  // Проверка пароля
-  if (password !== '123456') {
+  // Проверка логина и пароля
+  if (username !== CORRECT_USERNAME || password !== CORRECT_PASSWORD) {
     if (!failedAttempts[ip]) {
       failedAttempts[ip] = { count: 1, lastAttempt: currentTime };
     } else {
@@ -41,7 +44,7 @@ app.post('/login', (req, res) => {
     if (attemptsLeft <= 0) {
       return res.status(403).send('Вы были заблокированы на 4 часа за множественные ошибки входа.');
     } else {
-      return res.status(401).send(`Неверный пароль. Осталось попыток: ${attemptsLeft}`);
+      return res.status(401).send(`Неверный логин или пароль. Осталось попыток: ${attemptsLeft}`);
     }
   }
 

@@ -1,27 +1,38 @@
 document.querySelector('form').addEventListener('submit', async function (e) {
   e.preventDefault();
 
-  const username = document.getElementById('username').value;
-  const password = document.getElementById('password').value;
-
-  const response = await fetch('/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, password }),
-  });
-
-  const result = await response.text();
-
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value.trim();
   const messageBox = document.getElementById('message');
-  messageBox.innerText = result;
 
-  if (response.ok) {
-    // Успешный вход — запускаем конфетти
-    launchConfetti();
+  // Очистить сообщение
+  messageBox.textContent = '';
+  messageBox.style.color = 'black';
+
+  try {
+    const response = await fetch('/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+
+    const result = await response.text();
+
+    if (response.ok) {
+      messageBox.style.color = 'green';
+      messageBox.textContent = result;
+      launchConfetti();
+    } else {
+      messageBox.style.color = 'red';
+      messageBox.textContent = result;
+    }
+  } catch (error) {
+    messageBox.style.color = 'red';
+    messageBox.textContent = 'Ошибка подключения к серверу.';
+    console.error(error);
   }
 });
 
-// Функция запуска конфетти
 function launchConfetti() {
   const duration = 2 * 1000;
   const end = Date.now() + duration;

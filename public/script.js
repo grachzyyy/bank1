@@ -1,36 +1,47 @@
-const loginForm = document.getElementById('loginForm');
-const message = document.getElementById('message');
-const confetti = new Confetti();
-
-loginForm.addEventListener('submit', async (e) => {
+document.querySelector('form').addEventListener('submit', async function (e) {
   e.preventDefault();
 
-  const username = document.getElementById('username').value.trim();
+  const username = document.getElementById('username').value;
   const password = document.getElementById('password').value;
 
-  try {
-    const res = await fetch('/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
-    });
+  const response = await fetch('/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password }),
+  });
 
-    const text = await res.text();
+  const result = await response.text();
 
-    if (res.ok) {
-      showMessage(text, true);
-      confetti.start();
-    } else {
-      showMessage(text, false);
-    }
+  const messageBox = document.getElementById('message');
+  messageBox.innerText = result;
 
-  } catch (err) {
-    showMessage('Ошибка соединения с сервером.', false);
+  if (response.ok) {
+    // Успешный вход — запускаем конфетти
+    launchConfetti();
   }
 });
 
-function showMessage(text, success) {
-  message.className = 'message ' + (success ? 'success' : 'error');
-  message.textContent = text;
-  message.style.display = 'block';
+// Функция запуска конфетти
+function launchConfetti() {
+  const duration = 2 * 1000;
+  const end = Date.now() + duration;
+
+  (function frame() {
+    confetti({
+      particleCount: 5,
+      angle: 60,
+      spread: 55,
+      origin: { x: 0 },
+    });
+    confetti({
+      particleCount: 5,
+      angle: 120,
+      spread: 55,
+      origin: { x: 1 },
+    });
+
+    if (Date.now() < end) {
+      requestAnimationFrame(frame);
+    }
+  })();
 }

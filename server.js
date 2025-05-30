@@ -1,6 +1,5 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const moment = require('moment');
 
 const app = express();
 app.use(bodyParser.json());
@@ -8,20 +7,15 @@ app.use(express.static('public'));
 
 const PORT = 3000;
 
-// Словарь IP-адресов: { ip: { count, lastAttempt } }
 const failedAttempts = {};
 const MAX_ATTEMPTS = 5;
 const BLOCK_TIME = 4 * 60 * 60 * 1000; // 4 часа
-
-const CORRECT_USERNAME = 'bankuser';
-const CORRECT_PASSWORD = '123456';
 
 app.post('/login', (req, res) => {
   const ip = req.ip;
   const currentTime = Date.now();
   const { username, password } = req.body;
 
-  // Проверка на блокировку
   if (
     failedAttempts[ip] &&
     failedAttempts[ip].count >= MAX_ATTEMPTS &&
@@ -31,8 +25,7 @@ app.post('/login', (req, res) => {
     return res.status(403).send(`Вы заблокированы на 4 часа. Осталось: ${remaining} мин.`);
   }
 
-  // Проверка логина и пароля
-  if (username !== CORRECT_USERNAME || password !== CORRECT_PASSWORD) {
+  if (username !== 'bankuser' || password !== '123456') {
     if (!failedAttempts[ip]) {
       failedAttempts[ip] = { count: 1, lastAttempt: currentTime };
     } else {
@@ -48,7 +41,6 @@ app.post('/login', (req, res) => {
     }
   }
 
-  // Успешный вход
   failedAttempts[ip] = { count: 0, lastAttempt: currentTime };
   res.send(`Добро пожаловать, ${username}!`);
 });

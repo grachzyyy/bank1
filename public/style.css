@@ -1,42 +1,51 @@
 body {
   font-family: Arial, sans-serif;
-  background: #eef2f5;
+  background: linear-gradient(135deg, #74ebd5, #acb6e5);
+  height: 100vh;
+  margin: 0;
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
 }
 
-.login-box, .admin-box {
+.login-box {
   background: white;
-  padding: 30px;
-  border-radius: 12px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.1);
-  width: 90%;
-  max-width: 500px;
+  padding: 40px;
+  border-radius: 15px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  text-align: center;
+  width: 300px;
 }
 
-input, button {
+input {
   display: block;
   width: 100%;
-  padding: 12px;
-  margin: 10px 0;
+  margin-bottom: 15px;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+button {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  background-color: #4CAF50;
+  color: white;
+  border-radius: 8px;
   font-size: 16px;
+  cursor: pointer;
 }
 
 #message {
-  color: red;
   margin-top: 10px;
+  font-weight: bold;
 }
 
-table {
-  width: 100%;
+.log-box {
   margin-top: 20px;
-  border-collapse: collapse;
-}
-
-th, td {
-  border: 1px solid #ccc;
-  padding: 8px;
-  text-align: center;
+  text-align: left;
+  max-height: 400px;
+  overflow-y: auto;
+  width: 100%;
 }

@@ -1,27 +1,23 @@
-document.getElementById('loginForm').addEventListener('submit', async function(e) {
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
   e.preventDefault();
-  const username = document.getElementById('username').value;
-  const password = document.getElementById('password').value;
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value.trim();
 
-  const response = await fetch('/login', {
+  const res = await fetch('/login', {
     method: 'POST',
-    headers: {'Content-Type': 'application/json'},
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ username, password })
   });
 
-  const messageDiv = document.getElementById('message');
+  const msg = await res.text();
+  const messageEl = document.getElementById('message');
 
-  if (response.ok) {
-    const text = await response.text();
-    messageDiv.textContent = text;
-
-    if (username === 'admin') {
-      window.location.href = '/admin.html';
-    } else {
-      confetti();
-    }
+  if (msg === 'ok') {
+    messageEl.textContent = 'Добро пожаловать!';
+    confetti();
+  } else if (msg === 'admin') {
+    window.location.href = '/admin.html';
   } else {
-    const error = await response.text();
-    messageDiv.textContent = error;
+    messageEl.textContent = msg;
   }
 });

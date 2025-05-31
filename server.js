@@ -1,89 +1,92 @@
 const express = require('express');
-const bodyParser = require('body-parser');
 const fs = require('fs');
+const path = require('path');
+const bodyParser = require('body-parser');
 const moment = require('moment');
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
+
+const MAX_ATTEMPTS = 5;
+const BLOCK_TIME = 4 * 60 * 60 * 1000; // 4 часа
+
+let failedAttempts = {}; // { ip: { count, lastAttempt } }
 
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
-const MAX_ATTEMPTS = 5;
-const BLOCK_TIME = 4 * 60 * 60 * 1000;
-
-const logsPath = 'logs.json';
-const failedAttempts = {};
-
-function getIP(req) {
-  return req.headers['x-forwarded-for']?.split(',')[0] || req.connection.remoteAddress || req.ip;
+function getClientIp(req) {
+  const xf = req.headers['x-forwarded-for'];
+  return xf ? xf.split(',')[0] : req.socket.remoteAddress;
 }
 
-function saveLog(entry) {
-  const logs = fs.existsSync(logsPath) ? JSON.parse(fs.readFileSync(logsPath)) : [];
-  logs.push(entry);
-  fs.writeFileSync(logsPath, JSON.stringify(logs, null, 2));
+function loadLogs() {
+  try {
+    return JSON.parse(fs.readFileSync('logs.json'));
+  } catch {
+    return [];
+  }
+}
+
+function saveLogs(logs) {
+  fs.writeFileSync('logs.json', JSON.stringify(logs, null, 2));
 }
 
 app.post('/login', (req, res) => {
-  const ip = getIP(req);
-  const currentTime = Date.now();
+  const ip = getClientIp(req);
+  const time = new Date().toISOString();
   const { username, password } = req.body;
 
-  const isAdmin = username === 'admin' && password === '123456';
-  const isUser = username === 'bankuser' && password === '123456';
-
-  const logEntry = {
-    time: moment().format('YYYY-MM-DD HH:mm:ss'),
-    ip,
-    username,
-    password,
-    status: isAdmin || isUser ? 'успешно' : 'неудачно'
-  };
-  saveLog(logEntry);
-
-  if (!isAdmin) {
-    const attempt = failedAttempts[ip] || { count: 0, lastAttempt: 0 };
-
-    if (attempt.count >= MAX_ATTEMPTS && currentTime - attempt.lastAttempt < BLOCK_TIME) {
-      const remaining = Math.ceil((BLOCK_TIME - (currentTime - attempt.lastAttempt)) / 60000);
-      return res.status(403).send(`Вы заблокированы. Осталось: ${remaining} мин.`);
-    }
-
-    if (!isUser) {
-      attempt.count++;
-      attempt.lastAttempt = currentTime;
-      failedAttempts[ip] = attempt;
-
-      const attemptsLeft = MAX_ATTEMPTS - attempt.count;
-      if (attemptsLeft <= 0) return res.status(403).send('Вы были заблокированы за множественные ошибки входа.');
-      return res.status(401).send(`Неверные данные. Осталось попыток: ${attemptsLeft}`);
-    }
-
-    failedAttempts[ip] = { count: 0, lastAttempt: currentTime };
+  if (username === 'admin' && password === '123456') {
+    failedAttempts[ip] = { count: 0, lastAttempt: Date.now() };
+    return res.send('admin'); // всегда пускаем администратора
   }
 
-  if (isAdmin) return res.send('admin');
-  if (isUser) return res.send('ok');
+  if (failedAttempts[ip]?.count >= MAX_ATTEMPTS &&
+      Date.now() - failedAttempts[ip].lastAttempt < BLOCK_TIME) {
+    return res.status(403).send('Вы заблокированы на 4 часа.');
+  }
 
-  return res.status(401).send('Неверные данные');
+  const success = username === 'bankuser' && password === '123456';
+  const logs = loadLogs();
+  logs.push({ ip, time, username, password, success });
+  saveLogs(logs);
+
+  if (!success) {
+    if (!failedAttempts[ip]) failedAttempts[ip] = { count: 1, lastAttempt: Date.now() };
+    else {
+      failedAttempts[ip].count += 1;
+      failedAttempts[ip].lastAttempt = Date.now();
+    }
+
+    if (failedAttempts[ip].count >= MAX_ATTEMPTS)
+      return res.status(403).send('Вы заблокированы на 4 часа.');
+    else
+      return res.status(401).send(`Неверные данные. Осталось попыток: ${MAX_ATTEMPTS - failedAttempts[ip].count}`);
+  }
+
+  failedAttempts[ip] = { count: 0, lastAttempt: Date.now() };
+  return res.send('ok');
 });
 
 app.get('/logs', (req, res) => {
-  const logs = fs.existsSync(logsPath) ? JSON.parse(fs.readFileSync(logsPath)) : [];
-  res.send(logs);
+  res.json(loadLogs());
 });
 
-app.get('/ip-status', (req, res) => {
-  const ip = getIP(req);
-  const attempt = failedAttempts[ip];
-  if (attempt && attempt.count >= MAX_ATTEMPTS) return res.send('Заблокирован');
-  res.send('Активен');
+app.get('/status', (req, res) => {
+  const ip = req.query.ip;
+  const status = failedAttempts[ip];
+  if (!status) return res.send('Не заблокирован');
+  if (status.count < MAX_ATTEMPTS) return res.send('Не заблокирован');
+  const timeLeft = BLOCK_TIME - (Date.now() - status.lastAttempt);
+  return timeLeft > 0 ? res.send(`Заблокирован. Осталось: ${Math.ceil(timeLeft / 60000)} мин`) : res.send('Не заблокирован');
 });
 
 app.post('/unblock', (req, res) => {
-  const ip = getIP(req);
+  const ip = req.body.ip;
   delete failedAttempts[ip];
-  res.send('IP разблокирован');
+  res.send('Разблокировано');
 });
 
-app.listen(PORT, () => console.log(`Сервер запущен: http://localhost:${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Сервер на http://localhost:${PORT}`);
+});

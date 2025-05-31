@@ -1,97 +1,85 @@
 const express = require('express');
-const fs = require('fs');
-const path = require('path');
 const bodyParser = require('body-parser');
+const fs = require('fs');
 const moment = require('moment');
+const path = require('path');
 
 const app = express();
+const PORT = 3000;
+const MAX_ATTEMPTS = 5;
+const BLOCK_TIME = 4 * 60 * 60 * 1000; // 4 часа
+const LOG_FILE = 'logs.json';
+
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
-const PORT = 3000;
-
-const MAX_ATTEMPTS = 5;
-const BLOCK_TIME = 4 * 60 * 60 * 1000;
-const LOG_FILE = 'logs.json';
-
 const failedAttempts = {};
 
-function logAttempt({ ip, username, success, message }) {
-  const logs = fs.existsSync(LOG_FILE)
-    ? JSON.parse(fs.readFileSync(LOG_FILE))
-    : [];
-
+function logAttempt(ip, username, status, action) {
+  const logs = fs.existsSync(LOG_FILE) ? JSON.parse(fs.readFileSync(LOG_FILE)) : [];
   logs.push({
+    timestamp: moment().format('YYYY-MM-DD HH:mm:ss'),
     ip,
-    time: Date.now(),
     username,
-    success,
-    message
+    status,
+    action
   });
-
   fs.writeFileSync(LOG_FILE, JSON.stringify(logs, null, 2));
 }
 
 app.post('/login', (req, res) => {
   const ip = req.ip;
-  const now = Date.now();
   const { username, password } = req.body;
+  const now = Date.now();
 
+  // Проверка блокировки
   if (
     failedAttempts[ip] &&
     failedAttempts[ip].count >= MAX_ATTEMPTS &&
-    now - failedAttempts[ip].lastAttempt < BLOCK_TIME
+    now - failedAttempts[ip].lastAttempt < BLOCK_TIME &&
+    username !== 'admin'
   ) {
-    const msg = 'Вы заблокированы на 4 часа.';
-    logAttempt({ ip, username, success: false, message: msg });
-    return res.status(403).send(msg);
+    logAttempt(ip, username, 'BLOCKED', 'Too many failed attempts');
+    const remaining = Math.ceil((BLOCK_TIME - (now - failedAttempts[ip].lastAttempt)) / 60000);
+    return res.status(403).send(`IP заблокирован. Осталось: ${remaining} мин.`);
   }
 
-  // Admin вход
-  if (username === 'admin' && password === 'admin123') {
-    logAttempt({ ip, username, success: true, message: 'Вход администратора' });
-    return res.send('Вход администратора успешен!');
-  }
+  const isValid =
+    (username === 'bankuser' && password === '123456') ||
+    (username === 'admin' && password === '123456');
 
-  // Стандартный вход
-  if (username === 'bankuser' && password === '123456') {
-    failedAttempts[ip] = { count: 0, lastAttempt: now };
-    logAttempt({ ip, username, success: true, message: 'Успешный вход' });
-    return res.send(`Добро пожаловать, ${username}!`);
-  } else {
-    if (!failedAttempts[ip]) {
-      failedAttempts[ip] = { count: 1, lastAttempt: now };
+  if (!isValid) {
+    failedAttempts[ip] = failedAttempts[ip] || { count: 0, lastAttempt: now };
+    failedAttempts[ip].count++;
+    failedAttempts[ip].lastAttempt = now;
+
+    logAttempt(ip, username, 'FAILED', 'Wrong login or password');
+
+    const left = MAX_ATTEMPTS - failedAttempts[ip].count;
+    if (left <= 0) {
+      return res.status(403).send('IP заблокирован на 4 часа.');
     } else {
-      failedAttempts[ip].count++;
-      failedAttempts[ip].lastAttempt = now;
+      return res.status(401).send(`Неверный логин или пароль. Осталось попыток: ${left}`);
     }
-
-    const attemptsLeft = MAX_ATTEMPTS - failedAttempts[ip].count;
-    const msg = attemptsLeft <= 0
-      ? 'Вы были заблокированы на 4 часа за множественные ошибки входа.'
-      : `Неверный логин или пароль. Осталось попыток: ${attemptsLeft}`;
-
-    logAttempt({ ip, username, success: false, message: msg });
-
-    return res.status(401).send(msg);
   }
+
+  // Сброс счётчика при входе админа
+  if (username === 'admin') {
+    failedAttempts[ip] = { count: 0, lastAttempt: 0 };
+    logAttempt(ip, username, 'SUCCESS', 'Admin login - IP unblocked');
+    return res.json({ success: true, admin: true });
+  }
+
+  failedAttempts[ip] = { count: 0, lastAttempt: 0 };
+  logAttempt(ip, username, 'SUCCESS', 'User login');
+  res.json({ success: true, admin: false });
 });
 
-// 🔐 Admin API
-app.get('/admin/logs', (req, res) => {
-  const logs = fs.existsSync(LOG_FILE)
-    ? JSON.parse(fs.readFileSync(LOG_FILE))
-    : [];
+app.get('/logs', (req, res) => {
+  const logs = fs.existsSync(LOG_FILE) ? JSON.parse(fs.readFileSync(LOG_FILE)) : [];
   res.json(logs);
 });
 
-app.post('/admin/clear-blocks', (req, res) => {
-  for (let ip in failedAttempts) {
-    failedAttempts[ip] = { count: 0, lastAttempt: 0 };
-  }
-  res.send('Блокировки успешно сброшены!');
-});
-
 app.listen(PORT, () => {
-  console.log(`Сервер запущен: http://localhost:${PORT}`);
+  console.log(`Сервер запущен на http://localhost:${PORT}`);
 });

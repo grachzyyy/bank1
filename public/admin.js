@@ -1,26 +1,26 @@
-async function loadLogs() {
-  const res = await fetch('/logs');
-  const logs = await res.json();
+document.getElementById("refreshBtn").addEventListener("click", async () => {
+  try {
+    const res = await fetch("/logs");
+    const logs = await res.json();
+    const container = document.getElementById("logsContainer");
 
-  const table = document.getElementById("log-table");
-  table.innerHTML = "";
+    container.innerHTML = "";
 
-  logs.forEach(log => {
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${log.time}</td>
-      <td>${log.ip}</td>
-      <td>${log.username}</td>
-      <td>${log.status}</td>
-    `;
-    table.appendChild(row);
-  });
-}
+    logs.forEach((log, i) => {
+      const block = document.createElement("details");
+      const summary = document.createElement("summary");
+      summary.textContent = `${i + 1}. ${log.time} — ${log.ip} — ${log.username}`;
+      block.appendChild(summary);
 
-document.getElementById("refresh").addEventListener("click", loadLogs);
-document.getElementById("reset-blocks").addEventListener("click", async () => {
-  await fetch('/reset', { method: 'POST' });
-  alert("Блокировки сброшены");
+      const details = document.createElement("pre");
+      details.textContent = JSON.stringify(log, null, 2);
+      block.appendChild(details);
+
+      container.appendChild(block);
+    });
+  } catch {
+    alert("Ошибка загрузки логов.");
+  }
 });
 
-loadLogs();
+window.onload = () => document.getElementById("refreshBtn").click();

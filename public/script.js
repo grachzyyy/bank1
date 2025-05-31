@@ -1,31 +1,27 @@
-document.getElementById("loginForm").addEventListener("submit", async (e) => {
+document.getElementById('loginForm').addEventListener('submit', async function(e) {
   e.preventDefault();
-  const username = document.getElementById("username").value;
-  const password = document.getElementById("password").value;
+  const username = document.getElementById('username').value;
+  const password = document.getElementById('password').value;
 
-  try {
-    const res = await fetch("/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password })
-    });
+  const response = await fetch('/login', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ username, password })
+  });
 
-    const text = await res.text();
-    const msgDiv = document.getElementById("message");
+  const messageDiv = document.getElementById('message');
 
-    if (res.status === 200) {
-      if (username === "admin") {
-        window.location.href = "/admin.html";
-      } else {
-        confetti();
-        msgDiv.textContent = text;
-        msgDiv.style.color = "green";
-      }
+  if (response.ok) {
+    const text = await response.text();
+    messageDiv.textContent = text;
+
+    if (username === 'admin') {
+      window.location.href = '/admin.html';
     } else {
-      msgDiv.textContent = text;
-      msgDiv.style.color = "red";
+      confetti();
     }
-  } catch (err) {
-    document.getElementById("message").textContent = "Ошибка сервера";
+  } else {
+    const error = await response.text();
+    messageDiv.textContent = error;
   }
 });

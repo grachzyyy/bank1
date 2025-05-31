@@ -15,6 +15,8 @@ body {
   box-shadow: 0 4px 8px rgba(0,0,0,0.2);
   text-align: center;
   width: 300px;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 input {
@@ -40,38 +42,4 @@ button {
 #message {
   margin-top: 10px;
   font-weight: bold;
-}
-
-/* ——— Новое: лог-панель со скроллом ——— */
-
-#logs {
-  max-height: 400px;
-  overflow-y: auto;
-  text-align: left;
-  margin-top: 20px;
-  border: 1px solid #ccc;
-  padding: 10px;
-  border-radius: 10px;
-  background: #f9f9f9;
-}
-
-.log-entry {
-  margin-bottom: 10px;
-  padding-bottom: 10px;
-  border-bottom: 1px dashed #aaa;
-}
-
-#ip-status {
-  margin-top: 20px;
-  font-weight: bold;
-}
-
-#unblock-btn {
-  margin-top: 10px;
-  padding: 8px;
-  background: #f44336;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
 }

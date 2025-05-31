@@ -1,26 +1,17 @@
-document.getElementById("refreshBtn").addEventListener("click", async () => {
-  try {
-    const res = await fetch("/logs");
-    const logs = await res.json();
-    const container = document.getElementById("logsContainer");
-
-    container.innerHTML = "";
-
-    logs.forEach((log, i) => {
-      const block = document.createElement("details");
-      const summary = document.createElement("summary");
-      summary.textContent = `${i + 1}. ${log.time} — ${log.ip} — ${log.username}`;
-      block.appendChild(summary);
-
-      const details = document.createElement("pre");
-      details.textContent = JSON.stringify(log, null, 2);
-      block.appendChild(details);
-
-      container.appendChild(block);
-    });
-  } catch {
-    alert("Ошибка загрузки логов.");
-  }
-});
-
-window.onload = () => document.getElementById("refreshBtn").click();
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Админ-панель</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="admin-box">
+    <h2>Логи попыток входа</h2>
+    <button onclick="toggleLogs()">Показать / Скрыть</button>
+    <div id="logContainer" style="display: none;"></div>
+  </div>
+  <script src="admin.js"></script>
+</body>
+</html>

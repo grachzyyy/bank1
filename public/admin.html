@@ -7,21 +7,23 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="admin-panel">
-    <h1>Админ-панель</h1>
-    <table id="logTable">
+  <div class="admin-box">
+    <h2>Панель администратора</h2>
+    <button id="refresh">🔄 Обновить</button>
+    <button id="reset-blocks">🔓 Сбросить блокировки</button>
+    <table>
       <thead>
         <tr>
-          <th>Время</th>
+          <th>Дата и время</th>
           <th>IP</th>
-          <th>Логин</th>
+          <th>Пользователь</th>
           <th>Статус</th>
-          <th>Действие</th>
         </tr>
       </thead>
-      <tbody></tbody>
+      <tbody id="log-table"></tbody>
     </table>
   </div>
+
   <script src="admin.js"></script>
 </body>
 </html>

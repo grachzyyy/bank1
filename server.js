@@ -81,6 +81,11 @@ app.get('/status', (req, res) => {
   return timeLeft > 0 ? res.send(`Заблокирован. Осталось: ${Math.ceil(timeLeft / 60000)} мин`) : res.send('Не заблокирован');
 });
 
+app.get('/admin-logs', (req, res) => {
+  const logs = JSON.parse(fs.readFileSync('logs.json', 'utf-8'));
+  res.json({ logs });
+});
+
 app.post('/unblock', (req, res) => {
   const ip = req.body.ip;
   delete failedAttempts[ip];

@@ -1,51 +1,24 @@
-async function loadLogs() {
-  const res = await fetch('/logs');
-  const logs = await res.json();
+async function fetchLogs() {
+  const res = await fetch('/admin-logs');
+  const data = await res.json();
 
   const logsDiv = document.getElementById('logs');
   logsDiv.innerHTML = '';
 
-  logs.forEach(log => {
-    const logEntry = document.createElement('div');
-    logEntry.classList.add('log-entry');
+  const header = document.createElement('h3');
+  header.textContent = 'Попытки входа';
+  logsDiv.appendChild(header);
 
-    const short = document.createElement('div');
-    short.innerText = `${log.time} - ${log.username} - ${log.success ? 'Успех' : 'Ошибка'}`;
-    short.style.cursor = 'pointer';
-    short.onclick = () => {
-      details.style.display = details.style.display === 'none' ? 'block' : 'none';
-    };
+  const logs = data.logs;
 
-    const details = document.createElement('div');
-    details.style.display = 'none';
-    details.innerHTML = `
-      <p><b>IP:</b> ${log.ip}</p>
-      <p><b>Логин:</b> ${log.username}</p>
-      <p><b>Пароль:</b> ${log.password}</p>
-      <button onclick="unblock('${log.ip}')">Снять блокировку</button>
-      <p id="status-${log.ip}"></p>
-    `;
-
-    checkStatus(log.ip);
-
-    logEntry.appendChild(short);
-    logEntry.appendChild(details);
-    logsDiv.appendChild(logEntry);
+  logs.forEach(entry => {
+    const div = document.createElement('div');
+    div.style.marginBottom = '10px';
+    div.style.padding = '10px';
+    div.style.border = '1px solid #ccc';
+    div.style.borderRadius = '8px';
+    div.style.backgroundColor = '#fff';
+    div.textContent = `Логин: ${entry.username}, IP: ${entry.ip}, Успех: ${entry.success ? 'да' : 'нет'}, Время: ${entry.time}`;
+    logsDiv.appendChild(div);
   });
-}
-
-async function checkStatus(ip) {
-  const res = await fetch(`/status?ip=${ip}`);
-  const status = await res.text();
-  document.getElementById(`status-${ip}`).innerText = status;
-}
-
-async function unblock(ip) {
-  await fetch('/unblock', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ip })
-  });
-  alert(`IP ${ip} разблокирован`);
-  checkStatus(ip);
 }

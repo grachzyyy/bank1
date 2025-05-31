@@ -1,24 +1,31 @@
-async function fetchLogs() {
-  const res = await fetch('/admin-logs');
-  const data = await res.json();
-
+document.addEventListener('DOMContentLoaded', () => {
   const logsDiv = document.getElementById('logs');
-  logsDiv.innerHTML = '';
+  const ipStatus = document.getElementById('ip-status');
+  const unblockBtn = document.getElementById('unblock-btn');
 
-  const header = document.createElement('h3');
-  header.textContent = 'Попытки входа';
-  logsDiv.appendChild(header);
+  fetch('/logs')
+    .then(res => res.json())
+    .then(logs => {
+      logs.reverse().forEach(entry => {
+        const div = document.createElement('div');
+        div.classList.add('log-entry');
+        div.textContent = `[${entry.time}] IP: ${entry.ip}, Логин: ${entry.username}, Пароль: ${entry.password}, Статус: ${entry.status}`;
+        logsDiv.appendChild(div);
+      });
+    });
 
-  const logs = data.logs;
+  fetch('/ip-status')
+    .then(res => res.text())
+    .then(status => {
+      ipStatus.textContent = `Статус IP: ${status}`;
+    });
 
-  logs.forEach(entry => {
-    const div = document.createElement('div');
-    div.style.marginBottom = '10px';
-    div.style.padding = '10px';
-    div.style.border = '1px solid #ccc';
-    div.style.borderRadius = '8px';
-    div.style.backgroundColor = '#fff';
-    div.textContent = `Логин: ${entry.username}, IP: ${entry.ip}, Успех: ${entry.success ? 'да' : 'нет'}, Время: ${entry.time}`;
-    logsDiv.appendChild(div);
+  unblockBtn.addEventListener('click', () => {
+    fetch('/unblock', { method: 'POST' })
+      .then(res => res.text())
+      .then(text => {
+        alert(text);
+        location.reload();
+      });
   });
-}
+});

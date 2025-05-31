@@ -1,31 +1,51 @@
-document.addEventListener('DOMContentLoaded', () => {
+async function loadLogs() {
+  const res = await fetch('/logs');
+  const logs = await res.json();
+
   const logsDiv = document.getElementById('logs');
-  const ipStatus = document.getElementById('ip-status');
-  const unblockBtn = document.getElementById('unblock-btn');
+  logsDiv.innerHTML = '';
 
-  fetch('/logs')
-    .then(res => res.json())
-    .then(logs => {
-      logs.reverse().forEach(entry => {
-        const div = document.createElement('div');
-        div.classList.add('log-entry');
-        div.textContent = `[${entry.time}] IP: ${entry.ip}, Логин: ${entry.username}, Пароль: ${entry.password}, Статус: ${entry.status}`;
-        logsDiv.appendChild(div);
-      });
-    });
+  logs.forEach(log => {
+    const logEntry = document.createElement('div');
+    logEntry.classList.add('log-entry');
 
-  fetch('/ip-status')
-    .then(res => res.text())
-    .then(status => {
-      ipStatus.textContent = `Статус IP: ${status}`;
-    });
+    const short = document.createElement('div');
+    short.innerText = `${log.time} - ${log.username} - ${log.success ? 'Успех' : 'Ошибка'}`;
+    short.style.cursor = 'pointer';
+    short.onclick = () => {
+      details.style.display = details.style.display === 'none' ? 'block' : 'none';
+    };
 
-  unblockBtn.addEventListener('click', () => {
-    fetch('/unblock', { method: 'POST' })
-      .then(res => res.text())
-      .then(text => {
-        alert(text);
-        location.reload();
-      });
+    const details = document.createElement('div');
+    details.style.display = 'none';
+    details.innerHTML = `
+      <p><b>IP:</b> ${log.ip}</p>
+      <p><b>Логин:</b> ${log.username}</p>
+      <p><b>Пароль:</b> ${log.password}</p>
+      <button onclick="unblock('${log.ip}')">Снять блокировку</button>
+      <p id="status-${log.ip}"></p>
+    `;
+
+    checkStatus(log.ip);
+
+    logEntry.appendChild(short);
+    logEntry.appendChild(details);
+    logsDiv.appendChild(logEntry);
   });
-});
+}
+
+async function checkStatus(ip) {
+  const res = await fetch(`/status?ip=${ip}`);
+  const status = await res.text();
+  document.getElementById(`status-${ip}`).innerText = status;
+}
+
+async function unblock(ip) {
+  await fetch('/unblock', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ip })
+  });
+  alert(`IP ${ip} разблокирован`);
+  checkStatus(ip);
+}

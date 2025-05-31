@@ -1,26 +1,16 @@
-async function fetchLogs() {
-  const res = await fetch('/admin/logs');
-  const logs = await res.json();
-  const tbody = document.querySelector('#log-table tbody');
-  tbody.innerHTML = '';
-  logs.forEach(log => {
-    const row = document.createElement('tr');
-    row.innerHTML = `
-      <td>${log.ip}</td>
-      <td>${new Date(log.time).toLocaleString()}</td>
-      <td>${log.username}</td>
-      <td>${log.success ? '✅ Успех' : '❌ Ошибка'}</td>
-      <td>${log.message}</td>
-    `;
-    tbody.appendChild(row);
+fetch('/logs')
+  .then(res => res.json())
+  .then(logs => {
+    const tbody = document.querySelector('#logTable tbody');
+    logs.reverse().forEach(log => {
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>${log.timestamp}</td>
+        <td>${log.ip}</td>
+        <td>${log.username}</td>
+        <td>${log.status}</td>
+        <td>${log.action}</td>
+      `;
+      tbody.appendChild(row);
+    });
   });
-}
-
-async function clearBlocks() {
-  const res = await fetch('/admin/clear-blocks', { method: 'POST' });
-  const result = await res.text();
-  alert(result);
-  fetchLogs();
-}
-
-fetchLogs();

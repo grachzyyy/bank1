@@ -1,17 +1,16 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <title>Админ-панель</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Админ панель</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="admin-box">
+  <div class="login-box">
     <h2>Админ-панель</h2>
     <button onclick="loadLogs()">Показать логи</button>
-    <input type="text" id="ipToUnblock" placeholder="Введите IP для разблокировки">
-    <button onclick="unblockIP()">Снять блокировку</button>
-    <div class="logs-container" id="logsContainer"></div>
+    <div id="logs"></div>
   </div>
   <script src="admin.js"></script>
 </body>

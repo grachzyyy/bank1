@@ -15,20 +15,19 @@ document.querySelector('.login-form').addEventListener('submit', async (e) => {
   if (!msgEl) {
     msgEl = document.createElement('div');
     msgEl.id = 'message';
-    msgEl.style.marginTop = '12px';
-    msgEl.style.fontWeight = '500';
-    msgEl.style.color = '#EF4444';
+    msgEl.className = 'login-message';
     document.querySelector('.login-form').appendChild(msgEl);
   }
 
+  msgEl.className = 'login-message'; // reset
   if (msg === 'ok') {
     msgEl.textContent = 'Добро пожаловать!';
-    msgEl.style.color = '#0E9F6E';
+    msgEl.classList.add('success');
     confetti();
   } else if (msg === 'admin') {
     window.location.href = '/admin.html';
   } else {
     msgEl.textContent = msg;
-    msgEl.style.color = '#EF4444';
+    msgEl.classList.add('error');
   }
 });

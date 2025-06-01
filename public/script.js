@@ -1,9 +1,9 @@
-// public/script.js — исправленный код
-document.querySelector('form').addEventListener('submit', async (e) => {
+const form = document.getElementById('loginForm');
+
+form.addEventListener('submit', async (e) => {
   e.preventDefault();
-  const username = document.querySelector('#username').value;
-  const password = document.querySelector('#password').value;
-  const message = document.querySelector('#message');
+  const username = form.username.value;
+  const password = form.password.value;
 
   try {
     const res = await fetch('/login', {
@@ -13,19 +13,15 @@ document.querySelector('form').addEventListener('submit', async (e) => {
     });
 
     const text = await res.text();
-    message.textContent = text;
+    alert(text);
 
-    if (res.ok) {
-      if (text === 'admin') {
-        window.location.href = 'admin.html';
-      } else {
-        // Показываем конфетти только при УСПЕШНОМ пользовательском входе
-        import('https://cdn.skypack.dev/canvas-confetti').then(({ default: confetti }) => {
-          confetti();
-        });
-      }
+    if (res.ok && (text.includes('Добро пожаловать') || text === 'admin')) {
+      // Конфетти только при успешном входе
+      confetti();
+      if (text === 'admin') window.location.href = 'admin.html';
     }
+
   } catch (err) {
-    message.textContent = 'Ошибка при входе';
+    alert('Ошибка подключения к серверу.');
   }
 });

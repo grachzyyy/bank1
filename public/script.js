@@ -10,14 +10,14 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
   });
 
   const msg = await res.text();
-  const messageEl = document.getElementById('message');
+  const msgEl = document.getElementById('message');
 
   if (msg === 'ok') {
-    messageEl.textContent = 'Добро пожаловать!';
+    msgEl.textContent = 'Добро пожаловать!';
     confetti();
   } else if (msg === 'admin') {
     window.location.href = '/admin.html';
   } else {
-    messageEl.textContent = msg;
+    msgEl.textContent = msg;
   }
 });

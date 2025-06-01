@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const fs = require('fs');
 const moment = require('moment');
 const fetch = require('node-fetch');
+const xss = require('xss');
 const app = express();
 
 const PORT = 3000;
@@ -19,19 +20,6 @@ const failedAttempts = {};
 function getClientIP(req) {
   const forwarded = req.headers['x-forwarded-for'];
   return forwarded ? forwarded.split(',')[0] : req.socket.remoteAddress;
-}
-
-// Функция очистки от XSS и SQL
-function sanitizeInput(input) {
-  return input
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#x27;')
-    .replace(/--/g, '')
-    .replace(/;/g, '')
-    .replace(/\/\*/g, '')
-    .replace(/\*\//g, '');
 }
 
 function saveLog(entry) {
@@ -52,12 +40,17 @@ async function getLocation(ip) {
 
 app.post('/login', async (req, res) => {
   const ip = getClientIP(req);
-  const now = Date.now();
   let { username, password } = req.body;
+  const now = Date.now();
 
-  // Защита от XSS и SQL-инъекций
-  username = sanitizeInput(username);
-  password = sanitizeInput(password);
+  // XSS-фильтрация
+  username = xss(username);
+
+  // SQL-инъекция - эмуляция защиты
+  if (username.includes("'") || password.includes("'") || username.toLowerCase().includes("or 1=1")) {
+    saveLog({ time: moment().format(), ip, username, success: false, reason: 'SQL Injection attempt' });
+    return res.status(400).send('Обнаружена попытка SQL-инъекции!');
+  }
 
   if (username === 'admin' && password === '123456') {
     saveLog({ time: moment().format(), ip, username, success: true, admin: true });

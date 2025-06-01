@@ -19,7 +19,7 @@ document.querySelector('.login-form').addEventListener('submit', async (e) => {
     document.querySelector('.login-form').appendChild(msgEl);
   }
 
-  msgEl.className = 'login-message'; // reset
+  msgEl.className = 'login-message'; // сброс классов
   if (msg === 'ok') {
     msgEl.textContent = 'Добро пожаловать!';
     msgEl.classList.add('success');

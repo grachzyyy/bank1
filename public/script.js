@@ -1,33 +1,31 @@
+// public/script.js — исправленный код
 document.querySelector('form').addEventListener('submit', async (e) => {
   e.preventDefault();
+  const username = document.querySelector('#username').value;
+  const password = document.querySelector('#password').value;
+  const message = document.querySelector('#message');
 
-  const username = document.getElementById('username').value;
-  const password = document.getElementById('password').value;
+  try {
+    const res = await fetch('/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
 
-  const res = await fetch('/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, password })
-  });
-
-  const message = document.getElementById('message');
-  if (res.ok) {
     const text = await res.text();
+    message.textContent = text;
 
-    if (text === 'admin') {
-      window.location.href = '/admin.html';
-    } else {
-      message.innerText = text;
-
-      // Показываем конфетти ТОЛЬКО при успешном входе обычного пользователя
-      confetti({
-        particleCount: 150,
-        spread: 70,
-        origin: { y: 0.6 }
-      });
+    if (res.ok) {
+      if (text === 'admin') {
+        window.location.href = 'admin.html';
+      } else {
+        // Показываем конфетти только при УСПЕШНОМ пользовательском входе
+        import('https://cdn.skypack.dev/canvas-confetti').then(({ default: confetti }) => {
+          confetti();
+        });
+      }
     }
-  } else {
-    const error = await res.text();
-    message.innerText = error;
+  } catch (err) {
+    message.textContent = 'Ошибка при входе';
   }
 });

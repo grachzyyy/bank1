@@ -1,20 +1,28 @@
 const express = require('express');
-const bodyParser = require('body-parser');
 const fs = require('fs');
+const path = require('path');
+const bodyParser = require('body-parser');
+const moment = require('moment');
+const geoip = require('geoip-lite');
 const xss = require('xss');
-const fetch = require('node-fetch');
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 const MAX_ATTEMPTS = 5;
 const BLOCK_TIME = 4 * 60 * 60 * 1000;
+
 let failedAttempts = {};
 
 app.use(bodyParser.json());
 app.use(express.static('public'));
 
 function getClientIp(req) {
-  return (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
+  const xf = req.headers['x-forwarded-for'];
+  return xf ? xf.split(',')[0] : req.socket.remoteAddress;
+}
+
+function sanitizeInput(input) {
+  return xss(input.replace(/['";]/g, '')); // защита от SQL-инъекций и XSS
 }
 
 function loadLogs() {
@@ -29,74 +37,75 @@ function saveLogs(logs) {
   fs.writeFileSync('logs.json', JSON.stringify(logs, null, 2));
 }
 
-async function getLocation(ip) {
-  try {
-    const res = await fetch(`http://ip-api.com/json/${ip}?fields=country,city`);
-    const data = await res.json();
-    return `${data.country || 'Неизвестно'}, ${data.city || ''}`;
-  } catch {
-    return 'Неизвестно';
-  }
-}
-
-app.post('/login', async (req, res) => {
+app.post('/login', (req, res) => {
   const ip = getClientIp(req);
-  const username = xss(req.body.username);
-  const password = xss(req.body.password);
-  const now = Date.now();
+  const time = new Date().toISOString();
+  const { username, password } = req.body;
 
-  if (username === 'admin' && password === '123456') {
-    failedAttempts[ip] = { count: 0, lastAttempt: now };
+  // 🔒 Очистка от SQL и XSS атак
+  const cleanUsername = sanitizeInput(username);
+  const cleanPassword = sanitizeInput(password);
+
+  // Геолокация
+  const geo = geoip.lookup(ip) || {};
+  const location = geo.city && geo.country ? `${geo.city}, ${geo.country}` : 'Неизвестно';
+
+  if (cleanUsername === 'admin' && cleanPassword === '123456') {
+    failedAttempts[ip] = { count: 0, lastAttempt: Date.now() };
     return res.send('admin');
   }
 
-  const record = failedAttempts[ip];
-  if (record && record.count >= MAX_ATTEMPTS && now - record.lastAttempt < BLOCK_TIME) {
+  if (failedAttempts[ip]?.count >= MAX_ATTEMPTS &&
+      Date.now() - failedAttempts[ip].lastAttempt < BLOCK_TIME) {
     return res.status(403).send('Вы заблокированы на 4 часа.');
   }
 
-  const success = username === 'bankuser' && password === '123456';
-  const location = await getLocation(ip);
+  const success = cleanUsername === 'bankuser' && cleanPassword === '123456';
   const logs = loadLogs();
-  logs.push({ ip, location, time: new Date().toISOString(), username, password, success });
+  logs.push({ ip, time, username: cleanUsername, password: cleanPassword, location, success });
   saveLogs(logs);
 
   if (!success) {
-    failedAttempts[ip] = record
-      ? { count: record.count + 1, lastAttempt: now }
-      : { count: 1, lastAttempt: now };
-
-    const attemptsLeft = MAX_ATTEMPTS - failedAttempts[ip].count;
-    if (attemptsLeft <= 0) {
-      return res.status(403).send('Вы заблокированы на 4 часа.');
-    } else {
-      return res.status(401).send(`Неверные данные. Осталось попыток: ${attemptsLeft}`);
+    if (!failedAttempts[ip]) failedAttempts[ip] = { count: 1, lastAttempt: Date.now() };
+    else {
+      failedAttempts[ip].count += 1;
+      failedAttempts[ip].lastAttempt = Date.now();
     }
+
+    if (failedAttempts[ip].count >= MAX_ATTEMPTS)
+      return res.status(403).send('Вы заблокированы на 4 часа.');
+    else
+      return res.status(401).send(`Неверные данные. Осталось попыток: ${MAX_ATTEMPTS - failedAttempts[ip].count}`);
   }
 
-  failedAttempts[ip] = { count: 0, lastAttempt: now };
-  res.send('ok');
+  failedAttempts[ip] = { count: 0, lastAttempt: Date.now() };
+  return res.send('ok');
 });
 
 app.get('/logs', (req, res) => {
-  res.json(loadLogs());
+  const logs = loadLogs().map(log => ({
+    ...log,
+    username: xss(log.username),
+    password: xss(log.password),
+  }));
+  res.json(logs);
 });
 
 app.get('/status', (req, res) => {
   const ip = req.query.ip;
-  const record = failedAttempts[ip];
-  if (!record || record.count < MAX_ATTEMPTS) return res.send('Не заблокирован');
-
-  const timeLeft = BLOCK_TIME - (Date.now() - record.lastAttempt);
-  if (timeLeft > 0) {
-    return res.send(`Заблокирован. Осталось: ${Math.ceil(timeLeft / 60000)} мин`);
-  }
-  res.send('Не заблокирован');
+  const status = failedAttempts[ip];
+  if (!status) return res.send('Не заблокирован');
+  if (status.count < MAX_ATTEMPTS) return res.send('Не заблокирован');
+  const timeLeft = BLOCK_TIME - (Date.now() - status.lastAttempt);
+  return timeLeft > 0 ? res.send(`Заблокирован. Осталось: ${Math.ceil(timeLeft / 60000)} мин`) : res.send('Не заблокирован');
 });
 
 app.post('/unblock', (req, res) => {
-  delete failedAttempts[req.body.ip];
+  const ip = req.body.ip;
+  delete failedAttempts[ip];
   res.send('Разблокировано');
 });
 
-app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Сервер на http://localhost:${PORT}`);
+});

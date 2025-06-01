@@ -1,32 +1,31 @@
-function loadLogs() {
-  fetch('/logs')
-    .then(res => res.json())
-    .then(data => {
-      const logsDiv = document.getElementById('logs');
-      logsDiv.innerHTML = '';
-      data.forEach(log => {
-        const el = document.createElement('div');
-        el.className = 'log-entry';
-        el.innerHTML = `
-          <strong>IP:</strong> ${log.ip}<br>
-          <strong>Логин:</strong> ${log.username}<br>
-          <strong>Успех:</strong> ${log.success}<br>
-          <strong>Время:</strong> ${log.time}<br>
-          <strong>Местоположение:</strong> ${log.location}<br>
-          ${log.reason ? `<strong>Причина:</strong> ${log.reason}` : ''}
-        `;
-        logsDiv.appendChild(el);
-      });
-    });
-}
+document.addEventListener('DOMContentLoaded', async () => {
+  const container = document.getElementById('log-container');
+  const response = await fetch('/logs');
+  const logs = await response.json();
 
-function unblock() {
-  const ip = document.getElementById('unblockIp').value;
-  fetch('/unblock', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ip })
-  })
-    .then(res => res.text())
-    .then(alert);
+  logs.forEach(log => {
+    const div = document.createElement('div');
+    div.classList.add('log-entry');
+    div.innerHTML = `
+      <strong>Время:</strong> ${escapeHtml(log.time)}<br>
+      <strong>IP:</strong> ${escapeHtml(log.ip)}<br>
+      <strong>Пользователь:</strong> ${escapeHtml(log.username)}<br>
+      <strong>Успешно:</strong> ${log.success ? 'Да' : 'Нет'}<br>
+      <strong>Местоположение:</strong> ${escapeHtml(log.location)}<br>
+      ${log.reason ? `<strong>Причина:</strong> ${escapeHtml(log.reason)}<br>` : ''}
+      ${log.admin ? `<strong>Вход администратора</strong><br>` : ''}
+    `;
+    container.appendChild(div);
+  });
+});
+
+// Функция экранирования
+function escapeHtml(str) {
+  return str.replace(/[&<>"']/g, (tag) => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;',
+  }[tag]));
 }

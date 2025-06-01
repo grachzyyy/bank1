@@ -1,43 +1,45 @@
 body {
   font-family: Arial, sans-serif;
-  background: #f1f1f1;
+  background: linear-gradient(135deg, #74ebd5, #acb6e5);
+  height: 100vh;
+  margin: 0;
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  margin: 0;
 }
 
-.login-box, .admin-box {
+.login-box {
   background: white;
-  padding: 30px;
-  border-radius: 10px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  padding: 40px;
+  border-radius: 15px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  text-align: center;
   width: 300px;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 input {
+  display: block;
   width: 100%;
+  margin-bottom: 15px;
   padding: 10px;
-  margin: 10px 0;
-  border-radius: 5px;
+  border-radius: 8px;
   border: 1px solid #ccc;
 }
 
 button {
   width: 100%;
   padding: 10px;
-  background: #4CAF50;
-  color: white;
   border: none;
-  border-radius: 5px;
+  background-color: #4CAF50;
+  color: white;
+  border-radius: 8px;
+  font-size: 16px;
   cursor: pointer;
 }
 
-.logs-container {
-  max-height: 400px;
-  overflow-y: scroll;
+#message {
   margin-top: 10px;
-  font-size: 14px;
-  white-space: pre-wrap;
+  font-weight: bold;
 }

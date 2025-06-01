@@ -1,23 +1,17 @@
-async function loadLogs() {
-  const container = document.getElementById('logsContainer');
-  const res = await fetch('/logs');
-  const logs = await res.json();
-
-  container.innerHTML = '';
-  logs.forEach(log => {
-    const div = document.createElement('div');
-    div.textContent = `[${log.time}] ${log.ip} (${log.location}) - ${log.username} - ${log.success ? 'Успешно' : 'Ошибка'}${log.admin ? ' (Admin)' : ''}${log.reason ? ' - ' + log.reason : ''}`;
-    container.appendChild(div);
-  });
-}
-
-async function unblockIP() {
-  const ip = document.getElementById('ipToUnblock').value;
-  const res = await fetch('/unblock', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ ip })
-  });
-  const text = await res.text();
-  alert(text);
-}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Админ панель</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="login-box">
+    <h2>Админ-панель</h2>
+    <button onclick="loadLogs()">Показать логи</button>
+    <div id="logs"></div>
+  </div>
+  <script src="admin.js"></script>
+</body>
+</html>

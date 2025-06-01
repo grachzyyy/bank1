@@ -1,36 +1,36 @@
 async function loadLogs() {
   const res = await fetch('/logs');
   const logs = await res.json();
-
-  const logsDiv = document.getElementById('logs');
-  logsDiv.innerHTML = '';
+  const container = document.getElementById('logs');
+  container.innerHTML = '';
 
   logs.forEach(log => {
-    const logEntry = document.createElement('div');
-    logEntry.classList.add('log-entry');
+    const wrapper = document.createElement('div');
+    wrapper.className = 'log-entry';
 
-    const short = document.createElement('div');
-    short.innerText = `${log.time} - ${log.username} - ${log.success ? 'Успех' : 'Ошибка'}`;
-    short.style.cursor = 'pointer';
-    short.onclick = () => {
-      details.style.display = details.style.display === 'none' ? 'block' : 'none';
-    };
+    const summary = document.createElement('div');
+    summary.textContent = `${log.time} — ${log.username} — ${log.success ? '✅' : '❌'}`;
+    summary.style.cursor = 'pointer';
 
     const details = document.createElement('div');
     details.style.display = 'none';
     details.innerHTML = `
       <p><b>IP:</b> ${log.ip}</p>
+      <p><b>Локация:</b> ${log.location}</p>
       <p><b>Логин:</b> ${log.username}</p>
       <p><b>Пароль:</b> ${log.password}</p>
       <button onclick="unblock('${log.ip}')">Снять блокировку</button>
       <p id="status-${log.ip}"></p>
     `;
 
-    checkStatus(log.ip);
+    summary.addEventListener('click', () => {
+      details.style.display = details.style.display === 'none' ? 'block' : 'none';
+    });
 
-    logEntry.appendChild(short);
-    logEntry.appendChild(details);
-    logsDiv.appendChild(logEntry);
+    checkStatus(log.ip);
+    wrapper.appendChild(summary);
+    wrapper.appendChild(details);
+    container.appendChild(wrapper);
   });
 }
 

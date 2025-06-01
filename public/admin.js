@@ -1,17 +1,51 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Админ панель</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-  <div class="login-box">
-    <h2>Админ-панель</h2>
-    <button onclick="loadLogs()">Показать логи</button>
-    <div id="logs"></div>
-  </div>
-  <script src="admin.js"></script>
-</body>
-</html>
+async function loadLogs() {
+  const res = await fetch('/logs');
+  const logs = await res.json();
+
+  const logsDiv = document.getElementById('logs');
+  logsDiv.innerHTML = '';
+
+  logs.forEach(log => {
+    const logEntry = document.createElement('div');
+    logEntry.classList.add('log-entry');
+
+    const short = document.createElement('div');
+    short.innerText = `${log.time} - ${log.username} - ${log.success ? 'Успех' : 'Ошибка'}`;
+    short.style.cursor = 'pointer';
+    short.onclick = () => {
+      details.style.display = details.style.display === 'none' ? 'block' : 'none';
+    };
+
+    const details = document.createElement('div');
+    details.style.display = 'none';
+    details.innerHTML = `
+      <p><b>IP:</b> ${log.ip}</p>
+      <p><b>Логин:</b> ${log.username}</p>
+      <p><b>Пароль:</b> ${log.password}</p>
+      <button onclick="unblock('${log.ip}')">Снять блокировку</button>
+      <p id="status-${log.ip}"></p>
+    `;
+
+    checkStatus(log.ip);
+
+    logEntry.appendChild(short);
+    logEntry.appendChild(details);
+    logsDiv.appendChild(logEntry);
+  });
+}
+
+async function checkStatus(ip) {
+  const res = await fetch(`/status?ip=${ip}`);
+  const status = await res.text();
+  document.getElementById(`status-${ip}`).innerText = status;
+}
+
+async function unblock(ip) {
+  await fetch('/unblock', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ip })
+  });
+  alert(`IP ${ip} разблокирован`);
+  checkStatus(ip);
+}

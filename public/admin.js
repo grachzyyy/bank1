@@ -12,6 +12,7 @@ async function loadLogs() {
     const short = document.createElement('div');
     short.innerText = `${log.time} - ${log.username} - ${log.success ? 'Успех' : 'Ошибка'}`;
     short.style.cursor = 'pointer';
+    short.style.fontWeight = 'bold';
     short.onclick = () => {
       details.style.display = details.style.display === 'none' ? 'block' : 'none';
     };
@@ -23,8 +24,8 @@ async function loadLogs() {
       <p><b>Местоположение:</b> ${log.location || 'Неизвестно'}</p>
       <p><b>Логин:</b> ${log.username}</p>
       <p><b>Пароль:</b> ${log.password}</p>
-      <button onclick="unblock('${log.ip}')">Снять блокировку</button>
-      <p id="status-${log.ip}"></p>
+      <button onclick="unblock('${log.ip}')">🔓 Снять блокировку</button>
+      <p id="status-${log.ip}" style="margin-top: 0.5rem;"></p>
     `;
 
     checkStatus(log.ip);

@@ -1,31 +1,34 @@
-document.addEventListener('DOMContentLoaded', async () => {
-  const container = document.getElementById('log-container');
+async function showLogs() {
   const response = await fetch('/logs');
   const logs = await response.json();
+  const container = document.getElementById('logsContainer');
+  container.innerHTML = ''; // Очистка перед добавлением новых
 
   logs.forEach(log => {
     const div = document.createElement('div');
-    div.classList.add('log-entry');
+    div.style.borderBottom = '1px solid #ccc';
+    div.style.padding = '8px';
     div.innerHTML = `
-      <strong>Время:</strong> ${escapeHtml(log.time)}<br>
-      <strong>IP:</strong> ${escapeHtml(log.ip)}<br>
-      <strong>Пользователь:</strong> ${escapeHtml(log.username)}<br>
-      <strong>Успешно:</strong> ${log.success ? 'Да' : 'Нет'}<br>
-      <strong>Местоположение:</strong> ${escapeHtml(log.location)}<br>
-      ${log.reason ? `<strong>Причина:</strong> ${escapeHtml(log.reason)}<br>` : ''}
-      ${log.admin ? `<strong>Вход администратора</strong><br>` : ''}
-    `;
+      <b>IP:</b> ${log.ip}<br>
+      <b>Пользователь:</b> ${sanitize(log.username)}<br>
+      <b>Время:</b> ${log.time}<br>
+      <b>Успех:</b> ${log.success}<br>
+      <b>Местоположение:</b> ${sanitize(log.location || 'неизвестно')}<br>
+      <b>Причина:</b> ${sanitize(log.reason || '-')}`;
     container.appendChild(div);
   });
-});
+}
 
-// Функция экранирования
-function escapeHtml(str) {
-  return str.replace(/[&<>"']/g, (tag) => ({
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;',
-  }[tag]));
+function unblockIP() {
+  const ip = document.getElementById('ipInput').value;
+  fetch('/unblock', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ip })
+  }).then(res => res.text()).then(alert);
+}
+
+// XSS-защита: экранируем HTML
+function sanitize(str) {
+  return String(str).replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }

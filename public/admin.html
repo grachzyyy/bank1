@@ -2,17 +2,38 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Админ панель</title>
-  <link rel="stylesheet" href="style.css" />
+  <title>Админ-панель</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    #logs {
+      max-height: 400px;
+      overflow-y: auto;
+      padding: 10px;
+      background: #f9f9f9;
+      border: 1px solid #ccc;
+      margin-top: 15px;
+      border-radius: 8px;
+    }
+    .log-entry {
+      margin-bottom: 10px;
+      background: #fff;
+      padding: 8px;
+      border-radius: 5px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .ip-status {
+      margin-top: 10px;
+    }
+  </style>
 </head>
 <body>
   <div class="login-box">
     <h2>Админ-панель</h2>
     <button onclick="loadLogs()">Показать логи</button>
+    <input type="text" id="unblockIp" placeholder="Введите IP для разблокировки" />
+    <button onclick="unblock()">Снять блокировку</button>
     <div id="logs"></div>
   </div>
   <script src="admin.js"></script>
 </body>
 </html>
-

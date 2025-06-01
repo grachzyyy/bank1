@@ -1,44 +1,43 @@
 body {
   font-family: Arial, sans-serif;
-  background: #f0f0f0;
+  background: #f1f1f1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
   margin: 0;
-  padding: 40px;
 }
 
-.admin-panel {
-  max-width: 500px;
-  margin: auto;
+.login-box, .admin-box {
   background: white;
   padding: 30px;
   border-radius: 10px;
-  box-shadow: 0 0 15px rgba(0,0,0,0.2);
-  text-align: center;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  width: 300px;
 }
 
-.admin-panel button {
+input {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+button {
+  width: 100%;
+  padding: 10px;
   background: #4CAF50;
   color: white;
-  padding: 10px;
-  margin-top: 10px;
   border: none;
-  border-radius: 6px;
-  width: 100%;
-  font-size: 16px;
+  border-radius: 5px;
   cursor: pointer;
 }
 
-.admin-panel input {
-  width: 100%;
-  padding: 10px;
-  margin-top: 15px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-}
-
 .logs-container {
-  max-height: 300px;
-  overflow-y: auto;
-  margin-top: 20px;
-  text-align: left;
+  max-height: 400px;
+  overflow-y: scroll;
+  margin-top: 10px;
   font-size: 14px;
+  white-space: pre-wrap;
 }

@@ -1,27 +1,26 @@
-const form = document.getElementById('loginForm');
+async function login() {
+  const username = document.getElementById('username').value;
+  const password = document.getElementById('password').value;
 
-form.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const username = form.username.value;
-  const password = form.password.value;
+  const res = await fetch('/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username, password })
+  });
 
-  try {
-    const res = await fetch('/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
-    });
+  const message = document.getElementById('message');
 
+  if (res.ok) {
     const text = await res.text();
-    alert(text);
+    message.textContent = text;
 
-    if (res.ok && (text.includes('Добро пожаловать') || text === 'admin')) {
-      // Конфетти только при успешном входе
-      confetti();
-      if (text === 'admin') window.location.href = 'admin.html';
+    if (text === 'admin') {
+      window.location.href = 'admin.html';
+    } else {
+      confetti(); // запускается ТОЛЬКО при успешном входе
     }
-
-  } catch (err) {
-    alert('Ошибка подключения к серверу.');
+  } else {
+    const error = await res.text();
+    message.textContent = error;
   }
-});
+}

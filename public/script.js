@@ -1,6 +1,7 @@
-async function login() {
-  const username = document.getElementById('username').value;
-  const password = document.getElementById('password').value;
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value.trim();
 
   const res = await fetch('/login', {
     method: 'POST',
@@ -8,19 +9,15 @@ async function login() {
     body: JSON.stringify({ username, password })
   });
 
-  const message = document.getElementById('message');
+  const msg = await res.text();
+  const messageEl = document.getElementById('message');
 
-  if (res.ok) {
-    const text = await res.text();
-    message.textContent = text;
-
-    if (text === 'admin') {
-      window.location.href = 'admin.html';
-    } else {
-      confetti(); // запускается ТОЛЬКО при успешном входе
-    }
+  if (msg === 'ok') {
+    messageEl.textContent = 'Добро пожаловать!';
+    confetti();
+  } else if (msg === 'admin') {
+    window.location.href = '/admin.html';
   } else {
-    const error = await res.text();
-    message.textContent = error;
+    messageEl.textContent = msg;
   }
-}
+});

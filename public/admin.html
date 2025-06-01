@@ -6,12 +6,12 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="admin-panel">
+  <div class="admin-box">
     <h2>Админ-панель</h2>
-    <button onclick="showLogs()">Показать логи</button>
-    <input id="ipInput" placeholder="Введите IP для разблокировки">
+    <button onclick="loadLogs()">Показать логи</button>
+    <input type="text" id="ipToUnblock" placeholder="Введите IP для разблокировки">
     <button onclick="unblockIP()">Снять блокировку</button>
-    <div id="logsContainer" class="logs-container"></div>
+    <div class="logs-container" id="logsContainer"></div>
   </div>
   <script src="admin.js"></script>
 </body>
